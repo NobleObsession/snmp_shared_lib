@@ -844,6 +844,7 @@ bool CheckTrapOid(snmp_pdu* pdu){
             }
           memcpy(trapOid, vars->val.objid, vars->val_len);
           trapOidLen = vars->val_len /sizeof(oid);
+          std::cout << "snmptrapd "<< trapOid << " " <<  trapOidLen << std::endl;
           return true;
 }
 

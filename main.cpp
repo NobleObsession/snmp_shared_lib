@@ -1,7 +1,9 @@
 #include <iostream>
 
+#include "mib_handler.h"
+
 int main()
 {
-    std::cout << "Hello World!" << std::endl;
+    init_mib();
     return 0;
 }
