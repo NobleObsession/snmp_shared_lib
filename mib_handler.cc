@@ -253,8 +253,6 @@ module_name(int modid, char *cp)
             strcpy(cp, mp->name);
             return (cp);
         }
-
-    //if (modid != -1) DEBUGMSGTL(("parse-mibs", "Module %d not found\n", modid));
     sprintf(cp, "#%d", modid);
     return (cp);
 }
@@ -959,6 +957,7 @@ sprint_realloc_by_type(u_char ** buf, size_t * buf_len, size_t * out_len,
                        const netsnmp_variable_list * var,
                        const struct enum_list *enums,
                        const char *hint, const char *units)
+
 {
     switch (var->type) {
     case ASN_INTEGER:
@@ -968,42 +967,46 @@ sprint_realloc_by_type(u_char ** buf, size_t * buf_len, size_t * out_len,
         return sprint_realloc_octet_string(buf, buf_len, out_len,
                                            allow_realloc, var, enums, hint,
                                            units);
-    /*case ASN_BIT_STR:
-        return sprint_realloc_bitstring(buf, buf_len, out_len,
-                                        allow_realloc, var, enums, hint,
-                                        units);*/
+    //case ASN_BIT_STR:
+        //return sprint_realloc_bitstring(buf, buf_len, out_len,
+                                       // allow_realloc, var, enums, hint,
+                                       // units);*/
     case ASN_OBJECT_ID:
         return sprint_realloc_object_identifier(buf, buf_len, out_len,
                                                 allow_realloc, var, enums,
                                                 hint, units);
-    /*case ASN_TIMETICKS:
+    case ASN_TIMETICKS:
         return sprint_realloc_timeticks(buf, buf_len, out_len,
-                                        allow_realloc, var, enums, hint,
-                                        units);*/
-    /*case ASN_GAUGE:
-        return sprint_realloc_gauge(buf, buf_len, out_len, allow_realloc,
-                                    var, enums, hint, units);
-    case ASN_COUNTER:
-        return sprint_realloc_counter(buf, buf_len, out_len, allow_realloc,
-                                      var, enums, hint, units);
-    case ASN_IPADDRESS:
-        return sprint_realloc_ipaddress(buf, buf_len, out_len,
-                                        allow_realloc, var, enums, hint,
-                                        units);
-    case ASN_NULL:
-        return sprint_realloc_null(buf, buf_len, out_len, allow_realloc,
-                                   var, enums, hint, units);
-    case ASN_UINTEGER:
-        return sprint_realloc_uinteger(buf, buf_len, out_len,
-                                       allow_realloc, var, enums, hint,
-                                       units);
-    case ASN_COUNTER64:
-        return sprint_realloc_counter64(buf, buf_len, out_len,
-                                        allow_realloc, var, enums, hint,
-                                        units);*/
+                                      allow_realloc, var, enums, hint,
+                                      units);
+
+    //case ASN_GAUGE:
+        //return sprint_realloc_gauge(buf, buf_len, out_len, allow_realloc,
+                                    //var, enums, hint, units);
+                                    return 0;
+   // case ASN_COUNTER:
+       // return sprint_realloc_counter(buf, buf_len, out_len, allow_realloc,
+                                     // var, enums, hint, units);
+         return 0;
+    //case ASN_IPADDRESS:
+        //return sprint_realloc_ipaddress(buf, buf_len, out_len,
+                                       // allow_realloc, var, enums, hint,
+                                        //units);
+    //case ASN_NULL:
+       // return sprint_realloc_null(buf, buf_len, out_len, allow_realloc,
+                                  // var, enums, hint, units);
+
+    //case ASN_UINTEGER:
+        //return sprint_realloc_uinteger(buf, buf_len, out_len,
+                                     // allow_realloc, var, enums, hint,
+                                      // units);
+    //case ASN_COUNTER64:
+       // return sprint_realloc_counter64(buf, buf_len, out_len,
+                                       // allow_realloc, var, enums, hint,
+                                       // units);
     //default:
-        /*return sprint_realloc_badtype(buf, buf_len, out_len, allow_realloc,
-                                      var, enums, hint, units);*/
+        //return sprint_realloc_badtype(buf, buf_len, out_len, allow_realloc,
+                                      //var, enums, hint, units);
     }
 }
 
@@ -1340,8 +1343,9 @@ _get_realloc_symbol(const oid * objid, size_t objidlen,
     if (!objid || !buf) {
         return NULL;
     }
-
+    int counter = 0;
     for (; subtree; subtree = subtree->next_peer) {
+        ++counter;
         if (*objid == subtree->subid) {
         while (subtree->next_peer && subtree->next_peer->subid == *objid)
         subtree = subtree->next_peer;
@@ -1395,7 +1399,6 @@ _get_realloc_symbol(const oid * objid, size_t objidlen,
             }
         }
     }
-
     if (end_of_known) {
         *end_of_known = *out_len;
     }
@@ -2093,8 +2096,9 @@ init_tree_roots(void)
      * build root node
      */
     tp = (struct tree *) calloc(1, sizeof(struct tree));
-    if (tp == NULL)
+    if (tp == NULL){
         return;
+    }
     tp->label = strdup("joint-iso-ccitt");
     tp->modid = base_modid;
     tp->number_modules = 1;
@@ -2161,8 +2165,9 @@ netsnmp_init_mib_internals(void)
     int    b, i;
     int             max_modc;
 
-    if (tree_head)
+    if (tree_head){
         return;
+    }
 
     /*
      * Set up hash list of pre-defined tokens
@@ -2192,9 +2197,6 @@ netsnmp_init_mib_internals(void)
     tclist = (struct tc*) calloc(tc_alloc, sizeof(struct tc));
     build_translation_table();
     init_tree_roots();          /* Set up initial roots */
-    /*
-     * Relies on 'add_mibdir' having set up the modules
-     */
 }
 
 void
@@ -2559,7 +2561,6 @@ add_mibfile(const char* tmpstr)
         return 1;
     }
     std::string s(tmpstr);
-    std::cout << "parse-mibs Checking file: " + s << std::endl;
     mibLine = 1;
     File = tmpstr;
     if (get_token(fp, token, MAXTOKEN) != LABEL) {
@@ -3296,8 +3297,6 @@ do_linkup(struct module *mp, struct node *np)
      */
     init_node_hash(np);
     for (i = 0, mip = mp->imports; i < mp->no_imports; ++i, ++mip) {
-        char            modbuf[256];
-
         if (get_tc_index(mip->label, mip->modid) != -1)
             continue;
         tp = find_tree_node(mip->label, mip->modid);
@@ -3313,10 +3312,14 @@ do_linkup(struct module *mp, struct node *np)
      *   name, and then add them to the list of orphans
      */
 
-    if (!np)
-        return;
-    for (tp = tree_head; tp; tp = tp->next_peer)
+    if (!np){
+        return;}
+
+
+
+    for (tp = tree_head; tp; tp = tp->next_peer){
         do_subtree(tp, &np);
+    }
     if (!np)
         return;
 
@@ -3559,7 +3562,6 @@ parse_imports(FILE * fp)
 {
     int    type;
     char            token[MAXTOKEN];
-    char            modbuf[256];
 #define MAX_IMPORTS	512
     struct module_import *import_list;
     int             this_module;
@@ -3974,7 +3976,6 @@ getoid(FILE * fp, struct subid_s *id_arg, int length)
     char            token[MAXTOKEN];
 
     if ((type = get_token(fp, token, MAXTOKEN)) != LEFTBRACKET) {
-
         return 0;
     }
     type = get_token(fp, token, MAXTOKEN);
@@ -4489,7 +4490,7 @@ parse_objecttype(FILE * fp, char *name)
  * Also parses object-identity, since they are similar (ignore STATUS).
  *   - WJH 10/96
  */
-static struct node *
+/*static struct node *
 parse_objectgroup(FILE * fp, char *name, int what, struct objgroup **ol)
 {
     int             type;
@@ -4532,7 +4533,6 @@ parse_objectgroup(FILE * fp, char *name, int what, struct objgroup **ol)
         type = get_token(fp, token, type);
     }
     if (type != STATUS) {
-
         goto skip;
     }
     type = get_token(fp, token, MAXTOKEN);
@@ -4571,7 +4571,7 @@ parse_objectgroup(FILE * fp, char *name, int what, struct objgroup **ol)
         type = get_token(fp, token, MAXTOKEN);
 
     return merge_parse_objectid(np, fp, name);
-}
+}*/
 
 static struct varbind_list *
 getVarbinds(FILE * fp, struct varbind_list **retp)
@@ -4608,6 +4608,101 @@ getVarbinds(FILE * fp, struct varbind_list **retp)
     *retp = mylist;
     return mylist;
 }
+
+/*
+ * Parses an OBJECT GROUP macro.
+ * Returns 0 on error.
+ *
+ * Also parses object-identity, since they are similar (ignore STATUS).
+ *   - WJH 10/96
+ */
+static struct node *
+parse_objectgroup(FILE * fp, char *name, int what, struct objgroup **ol)
+{
+    int             type;
+    char            token[MAXTOKEN];
+    char            quoted_string_buffer[MAXQUOTESTR];
+    struct node    *np;
+
+    np = alloc_node(current_module);
+    if (np == NULL)
+        return (NULL);
+    type = get_token(fp, token, MAXTOKEN);
+    if (type == what) {
+        type = get_token(fp, token, MAXTOKEN);
+        if (type != LEFTBRACKET) {
+           // print_error("Expected \"{\"", token, type);
+            goto skip;
+        }
+        do {
+            struct objgroup *o;
+            type = get_token(fp, token, MAXTOKEN);
+            if (type != LABEL) {
+                //print_error("Bad identifier", token, type);
+                goto skip;
+            }
+            o = (struct objgroup *) malloc(sizeof(struct objgroup));
+            if (!o) {
+                //print_error("Resource failure", token, type);
+                goto skip;
+            }
+            o->line = mibLine;
+            o->name = strdup(token);
+            o->next = *ol;
+            *ol = o;
+            type = get_token(fp, token, MAXTOKEN);
+        } while (type == COMMA);
+        if (type != RIGHTBRACKET) {
+            //print_error("Expected \"}\" after list", token, type);
+            goto skip;
+        }
+        type = get_token(fp, token, type);
+    }
+    if (type != STATUS) {
+        //print_error("Expected STATUS", token, type);
+        goto skip;
+    }
+    type = get_token(fp, token, MAXTOKEN);
+    if (type != CURRENT && type != DEPRECATED && type != OBSOLETE) {
+        //print_error("Bad STATUS value", token, type);
+        goto skip;
+    }
+    type = get_token(fp, token, MAXTOKEN);
+    if (type != DESCRIPTION) {
+        //print_error("Expected DESCRIPTION", token, type);
+        goto skip;
+    }
+    type = get_token(fp, quoted_string_buffer, MAXQUOTESTR);
+    if (type != QUOTESTRING) {
+        //print_error("Bad DESCRIPTION", quoted_string_buffer, type);
+        free_node(np);
+        return NULL;
+    }
+    if (netsnmp_ds_get_boolean(NETSNMP_DS_LIBRARY_ID,
+                   NETSNMP_DS_LIB_SAVE_MIB_DESCRS)) {
+        np->description = strdup(quoted_string_buffer);
+    }
+    type = get_token(fp, token, MAXTOKEN);
+    if (type == REFERENCE) {
+        type = get_token(fp, quoted_string_buffer, MAXQUOTESTR);
+        if (type != QUOTESTRING) {
+            //print_error("Bad REFERENCE", quoted_string_buffer, type);
+            free_node(np);
+            return NULL;
+        }
+        np->reference = strdup(quoted_string_buffer);
+        type = get_token(fp, token, MAXTOKEN);
+    }
+    if (type != EQUALS)
+        //print_error("Expected \"::=\"", token, type);
+  skip:
+    while (type != EQUALS && type != ENDOFFILE){
+        type = get_token(fp, token, MAXTOKEN);
+    }
+
+    return merge_parse_objectid(np, fp, name);
+}
+
 
 /*
  * Parses a TRAP-TYPE macro.
@@ -5329,13 +5424,9 @@ parse_asntype(FILE * fp, char *name, int *ntype, char *ntoken)
             case INTEGER:
                 *ntype = get_token(fp, ntoken, MAXTOKEN);
                 do {
-                    if (*ntype != NUMBER)
-
                     *ntype = get_token(fp, ntoken, MAXTOKEN);
                     if (*ntype == RANGE) {
                         *ntype = get_token(fp, ntoken, MAXTOKEN);
-                        if (*ntype != NUMBER)
-
                         *ntype = get_token(fp, ntoken, MAXTOKEN);
                     }
                 } while (*ntype == BAR);
@@ -5451,6 +5542,302 @@ err:
 static struct node *
 parse(FILE * fp, struct node *root)
 {
+#ifdef TEST
+    extern void     xmalloc_stats(FILE *);
+#endif
+    char            token[MAXTOKEN];
+    char            name[MAXTOKEN+1];
+    int             type = LABEL;
+    int             lasttype = LABEL;
+
+#define BETWEEN_MIBS          1
+#define IN_MIB                2
+    int             state = BETWEEN_MIBS;
+    struct node    *np, *nnp;
+    struct objgroup *oldgroups = NULL, *oldobjects = NULL, *oldnotifs =
+        NULL;
+
+   // DEBUGMSGTL(("parse-file", "Parsing file:  %s...\n", File));
+
+    if (last_err_module)
+        free(last_err_module);
+    last_err_module = NULL;
+
+    np = root;
+    if (np != NULL) {
+        /*
+         * now find end of chain
+         */
+        while (np->next)
+            np = np->next;
+    }
+
+    while (type != ENDOFFILE) {
+        if (lasttype == CONTINUE)
+            lasttype = type;
+        else
+            type = lasttype = get_token(fp, token, MAXTOKEN);
+
+        switch (type) {
+        case END:
+            if (state != IN_MIB) {
+               // print_error("Error, END before start of MIB", NULL, type);
+                gMibError = MODULE_SYNTAX_ERROR;
+                return NULL;
+            } else {
+                struct module  *mp;
+#ifdef TEST
+                printf("\nNodes for Module %s:\n", name);
+                print_nodes(stdout, root);
+#endif
+                for (mp = module_head; mp; mp = mp->next)
+                    if (mp->modid == current_module)
+                        break;
+                scan_objlist(root, mp, objgroups, "Undefined OBJECT-GROUP");
+                scan_objlist(root, mp, objects, "Undefined OBJECT");
+                scan_objlist(root, mp, notifs, "Undefined NOTIFICATION");
+                objgroups = oldgroups;
+                objects = oldobjects;
+                notifs = oldnotifs;
+                do_linkup(mp, root);
+                np = root = NULL;
+            }
+            state = BETWEEN_MIBS;
+#ifdef TEST
+            if (netsnmp_ds_get_int(NETSNMP_DS_LIBRARY_ID,
+                   NETSNMP_DS_LIB_MIB_WARNINGS)) {
+                /* xmalloc_stats(stderr); */
+        }
+#endif
+            continue;
+        case IMPORTS:
+            parse_imports(fp);
+            continue;
+        case EXPORTS:
+            while (type != SEMI && type != ENDOFFILE)
+                type = get_token(fp, token, MAXTOKEN);
+            continue;
+        case LABEL:
+        case INTEGER:
+        case INTEGER32:
+        case UINTEGER32:
+        case UNSIGNED32:
+        case COUNTER:
+        case COUNTER64:
+        case GAUGE:
+        case IPADDR:
+        case NETADDR:
+        case NSAPADDRESS:
+        case OBJSYNTAX:
+        case APPSYNTAX:
+        case SIMPLESYNTAX:
+        case OBJNAME:
+        case NOTIFNAME:
+        case KW_OPAQUE:
+        case TIMETICKS:
+            break;
+        case ENDOFFILE:
+            continue;
+        default:
+            strlcpy(name, token, sizeof(name));
+            type = get_token(fp, token, MAXTOKEN);
+            nnp = NULL;
+            if (type == MACRO) {
+                nnp = parse_macro(fp, name);
+                if (nnp == NULL) {
+                    //print_error("Bad parse of MACRO", NULL, type);
+                    gMibError = MODULE_SYNTAX_ERROR;
+                    /*
+                     * return NULL;
+                     */
+                }
+                free_node(nnp); /* IGNORE */
+                nnp = NULL;
+            }
+            continue;           /* see if we can parse the rest of the file */
+        }
+        strlcpy(name, token, sizeof(name));
+        type = get_token(fp, token, MAXTOKEN);
+        nnp = NULL;
+
+        /*
+         * Handle obsolete method to assign an object identifier to a
+         * module
+         */
+        if (lasttype == LABEL && type == LEFTBRACKET) {
+            while (type != RIGHTBRACKET && type != ENDOFFILE)
+                type = get_token(fp, token, MAXTOKEN);
+            if (type == ENDOFFILE) {
+               // print_error("Expected \"}\"", token, type);
+                gMibError = MODULE_SYNTAX_ERROR;
+                return NULL;
+            }
+            type = get_token(fp, token, MAXTOKEN);
+        }
+
+        switch (type) {
+        case DEFINITIONS:
+            if (state != BETWEEN_MIBS) {
+                //print_error("Error, nested MIBS", NULL, type);
+                gMibError = MODULE_SYNTAX_ERROR;
+                return NULL;
+            }
+            state = IN_MIB;
+            current_module = which_module(name);
+            oldgroups = objgroups;
+            objgroups = NULL;
+            oldobjects = objects;
+            objects = NULL;
+            oldnotifs = notifs;
+            notifs = NULL;
+            if (current_module == -1) {
+                new_module(name, File);
+                current_module = which_module(name);
+            }
+            //DEBUGMSGTL(("parse-mibs", "Parsing MIB: %d %s\n",
+                        //current_module, name));
+            while ((type = get_token(fp, token, MAXTOKEN)) != ENDOFFILE)
+                if (type == BEGIN)
+                    break;
+            break;
+        case OBJTYPE:
+            nnp = parse_objecttype(fp, name);
+            if (nnp == NULL) {
+                //print_error("Bad parse of OBJECT-TYPE", NULL, type);
+                gMibError = MODULE_SYNTAX_ERROR;
+                return NULL;
+            }
+            break;
+        case OBJGROUP:
+            nnp = parse_objectgroup(fp, name, OBJECTS, &objects);
+            if (nnp == NULL) {
+                //print_error("Bad parse of OBJECT-GROUP", NULL, type);
+                gMibError = MODULE_SYNTAX_ERROR;
+                return NULL;
+            }
+            break;
+        case NOTIFGROUP:
+            nnp = parse_objectgroup(fp, name, NOTIFICATIONS, &notifs);
+            if (nnp == NULL) {
+                //print_error("Bad parse of NOTIFICATION-GROUP", NULL, type);
+                gMibError = MODULE_SYNTAX_ERROR;
+                return NULL;
+            }
+            break;
+        case TRAPTYPE:
+            nnp = parse_trapDefinition(fp, name);
+            if (nnp == NULL) {
+                //print_error("Bad parse of TRAP-TYPE", NULL, type);
+                gMibError = MODULE_SYNTAX_ERROR;
+                return NULL;
+            }
+            break;
+        case NOTIFTYPE:
+            nnp = parse_notificationDefinition(fp, name);
+            if (nnp == NULL) {
+                //print_error("Bad parse of NOTIFICATION-TYPE", NULL, type);
+                gMibError = MODULE_SYNTAX_ERROR;
+                return NULL;
+            }
+            break;
+        case COMPLIANCE:
+            nnp = parse_compliance(fp, name);
+            if (nnp == NULL) {
+                //print_error("Bad parse of MODULE-COMPLIANCE", NULL, type);
+                gMibError = MODULE_SYNTAX_ERROR;
+                return NULL;
+            }
+            break;
+        case AGENTCAP:
+            nnp = parse_capabilities(fp, name);
+            if (nnp == NULL) {
+               // print_error("Bad parse of AGENT-CAPABILITIES", NULL, type);
+                gMibError = MODULE_SYNTAX_ERROR;
+                return NULL;
+            }
+            break;
+        case MACRO:
+            nnp = parse_macro(fp, name);
+            if (nnp == NULL) {
+                //print_error("Bad parse of MACRO", NULL, type);
+                gMibError = MODULE_SYNTAX_ERROR;
+                /*
+                 * return NULL;
+                 */
+            }
+            free_node(nnp);     /* IGNORE */
+            nnp = NULL;
+            break;
+        case MODULEIDENTITY:
+            nnp = parse_moduleIdentity(fp, name);
+            if (nnp == NULL) {
+                //print_error("Bad parse of MODULE-IDENTITY", NULL, type);
+                gMibError = MODULE_SYNTAX_ERROR;
+                return NULL;
+            }
+            break;
+        case OBJIDENTITY:
+            nnp = parse_objectgroup(fp, name, OBJECTS, &objects);
+            if (nnp == NULL) {
+                //print_error("Bad parse of OBJECT-IDENTITY", NULL, type);
+                gMibError = MODULE_SYNTAX_ERROR;
+                return NULL;
+            }
+            break;
+        case OBJECT:
+            type = get_token(fp, token, MAXTOKEN);
+            if (type != IDENTIFIER) {
+                //print_error("Expected IDENTIFIER", token, type);
+                gMibError = MODULE_SYNTAX_ERROR;
+                return NULL;
+            }
+            type = get_token(fp, token, MAXTOKEN);
+            if (type != EQUALS) {
+               //print_error("Expected \"::=\"", token, type);
+                gMibError = MODULE_SYNTAX_ERROR;
+                return NULL;
+            }
+            nnp = parse_objectid(fp, name);
+            if (nnp == NULL) {
+                //print_error("Bad parse of OBJECT IDENTIFIER", NULL, type);
+                gMibError = MODULE_SYNTAX_ERROR;
+                return NULL;
+            }
+            break;
+        case EQUALS:
+            nnp = parse_asntype(fp, name, &type, token);
+            lasttype = CONTINUE;
+            break;
+        case ENDOFFILE:
+            break;
+        default:
+            //print_error("Bad operator", token, type);
+            gMibError = MODULE_SYNTAX_ERROR;
+            return NULL;
+        }
+        if (nnp) {
+            if (np)
+                np->next = nnp;
+            else
+                np = root = nnp;
+            while (np->next)
+                np = np->next;
+            if (np->type == TYPE_OTHER)
+                np->type = type;
+        }
+    }
+    //DEBUGMSGTL(("parse-file", "End of file (%s)\n", File));
+    return root;
+}
+
+/*
+ * Parses a mib file and returns a linked list of nodes found in the file.
+ * Returns NULL on error.
+ */
+/*
+static struct node *
+parse(FILE * fp, struct node *root)
+{
     char            token[MAXTOKEN];
     char            name[MAXTOKEN+1];
     int             type = LABEL;
@@ -5464,9 +5851,9 @@ parse(FILE * fp, struct node *root)
         NULL;
     np = root;
     if (np != NULL) {
-        /*
+       */ /*
          * now find end of chain
-         */
+         *//*
         while (np->next)
             np = np->next;
     }
@@ -5540,17 +5927,17 @@ parse(FILE * fp, struct node *root)
                 free_node(nnp);
                 nnp = NULL;
             } else
-            continue;           /* see if we can parse the rest of the file */
-      }
+            continue;          */ /* see if we can parse the rest of the file */
+     /* }
         strlcpy(name, token, sizeof(name));
         type = get_token(fp, token, MAXTOKEN);
         nnp = NULL;
 
-        /*
+       */ /*
          * Handle obsolete method to assign an object identifier to a
          * module
          */
-        if (lasttype == LABEL && type == LEFTBRACKET) {
+       /* if (lasttype == LABEL && type == LEFTBRACKET) {
             while (type != RIGHTBRACKET && type != ENDOFFILE)
                 type = get_token(fp, token, MAXTOKEN);
             if (type == ENDOFFILE) {
@@ -5642,11 +6029,11 @@ parse(FILE * fp, struct node *root)
             if (nnp == NULL) {
 
                 gMibError = MODULE_SYNTAX_ERROR;
-                /*
+               */ /*
                  * return NULL;
                  */
-            }
-            free_node(nnp);     /* IGNORE */
+           /* }
+            free_node(nnp);  */   /* IGNORE */ /*
             nnp = NULL;
             break;
         case MODULEIDENTITY:
@@ -5707,10 +6094,9 @@ parse(FILE * fp, struct node *root)
                 np->type = type;
         }
     }
-    std::cout << "parse-file End of file" << std::endl;
     return root;
 }
-
+*/
 /*
  * Returns the root of the whole tree
  *   (for backwards compatability)
@@ -5723,14 +6109,11 @@ read_mib(const char *filename)
 
     fp = fopen(filename, "r");
     if (fp == NULL) {
-        //snmp_log_perror(filename);
         return NULL;
     }
     mibLine = 1;
     File = filename;
-    //DEBUGMSGTL(("parse-mibs", "Parsing file: %s...\n", filename));
     if (get_token(fp, token, MAXTOKEN) != LABEL) {
-        std::cout << "Failed to parse MIB file" << std::endl;
         fclose(fp);
         return NULL;
     }
@@ -5808,12 +6191,10 @@ struct tree    *
 read_all_mibs(void)
 {
     struct module  *mp;
-
     for (mp = module_head; mp; mp = mp->next)
         if (mp->no_imports == -1)
-            netsnmp_read_module(mp->name);
+            netsnmp_read_module(mp->name);            
     adopt_orphans();
-
     /* If entered the syntax error loop in "read_module()" */
     if (gLoop == 1) {
         gLoop = 0;
@@ -5827,15 +6208,145 @@ read_all_mibs(void)
     return tree_head;
 }
 
-void init_mib(){
+void init_mib(const char *dirname){
     netsnmp_init_mib_internals();
-    char mib_dir[] = "/home/yana/mibs2/";
-    /*
-    * Initialise the MIB directory/ies
-    */
-
-    struct tree *tree_head = NULL ;
-    add_mibdir(mib_dir);
-    tree_head = read_all_mibs();
-    free_tree(tree_head);
+    add_mibdir(dirname);
+    read_all_mibs();
 }
+
+int
+sprint_realloc_variable(u_char ** buf, size_t * buf_len,
+                        size_t * out_len, int allow_realloc,
+                        const oid * objid, size_t objidlen,
+                        const netsnmp_variable_list * variable)
+{
+    int             buf_overflow = 0;
+    struct tree    *subtree = tree_head;
+
+    subtree =
+        netsnmp_sprint_realloc_objid_tree(buf, buf_len, out_len,
+                                          allow_realloc, &buf_overflow,
+                                          objid, objidlen);
+
+    if (buf_overflow) {
+        return 0;
+    }
+
+    if (!snmp_strcat
+        (buf, buf_len, out_len, allow_realloc,
+                     (const u_char *) " = ")) {
+        return 0;
+    }
+
+    if (variable->type == SNMP_NOSUCHOBJECT) {
+        return snmp_strcat(buf, buf_len, out_len, allow_realloc,
+                           (const u_char *)
+                           "No Such Object available on this agent at this OID");
+    } else if (variable->type == SNMP_NOSUCHINSTANCE) {
+        return snmp_strcat(buf, buf_len, out_len, allow_realloc,
+                           (const u_char *)
+                           "No Such Instance currently exists at this OID");
+    } else if (variable->type == SNMP_ENDOFMIBVIEW) {
+        return snmp_strcat(buf, buf_len, out_len, allow_realloc,
+                           (const u_char *)
+                           "No more variables left in this MIB View (It is past the end of the MIB tree)");
+    } else if (subtree) {
+        const char *units = NULL;
+        const char *hint = NULL;
+        if (!netsnmp_ds_get_boolean(NETSNMP_DS_LIBRARY_ID,
+                                    NETSNMP_DS_LIB_DONT_PRINT_UNITS)) {
+            units = subtree->units;
+        }
+
+        if (!netsnmp_ds_get_boolean(NETSNMP_DS_LIBRARY_ID,
+                                    NETSNMP_DS_LIB_NO_DISPLAY_HINT)) {
+            hint = subtree->hint;
+        }
+
+        if (subtree->printomat) {
+            return (*subtree->printomat) (buf, buf_len, out_len,
+                                          allow_realloc, variable,
+                                          subtree->enums, NULL,
+                                          NULL);
+        } else {
+            return sprint_realloc_by_type(buf, buf_len, out_len,
+                                          allow_realloc, variable,
+                                          subtree->enums, NULL,
+                                          NULL);
+        }
+    } else {
+        /*
+         * Handle rare case where tree is empty.
+         */
+        return sprint_realloc_by_type(buf, buf_len, out_len, allow_realloc,
+                                      variable, NULL, NULL, NULL);
+    }
+}
+
+
+bool
+realloc_format_plain_trap(u_char ** buf, size_t * buf_len,
+                          size_t * out_len, bool allow_realloc,
+                          snmp_pdu *pdu)
+
+     /*
+      * Function:
+      *    Format the trap information in the default way and put the results
+      * into the buffer, truncating at the buffer's length limit. This
+      * routine returns 1 if the output was completed successfully or
+      * 0 if it is truncated due to a memory allocation failure.
+      *
+      * Input Parameters:
+      *    buf, buf_len, out_len, allow_realloc - standard relocatable
+      *                                           buffer parameters
+      *    pdu       - the pdu information
+      */
+{
+        netsnmp_variable_list *vars;        /* variables assoc with trap */    /*
+         * Output the PDU variables.
+         */
+
+
+        for (vars = pdu->variables; vars != NULL; vars = vars->next_variable) {
+            if (!snmp_strcat
+                (buf, buf_len, out_len, allow_realloc,
+                 (const u_char *) "\t")) {
+                return false;
+            }
+            if (!sprint_realloc_variable(buf, buf_len, out_len, allow_realloc,
+                                         vars->name, vars->name_length,
+                                         vars)) {
+                return false;
+            }
+            if (!snmp_strcat
+                    (buf, buf_len, out_len, allow_realloc, (const u_char *) "\n")) {
+                    return false;
+            }
+
+             /*
+             * String is already null-terminated.  That's all folks!
+             */
+
+        }
+         return true;
+    }
+/*
+ *  Trap handler for logging to a file
+ */
+bool print_handler(snmp_pdu *pdu)
+{
+    u_char         *rbuf = NULL;
+    size_t          r_len = 64, o_len = 0;
+
+    if ((rbuf = (u_char *) calloc(r_len, 1)) == NULL) {
+            std::cout << "couldn't display trap -- malloc failed\n";
+            return false;	/* Failed but keep going */
+    }
+    bool result = realloc_format_plain_trap(&rbuf, &r_len, &o_len, true,
+                                                       pdu);
+    for(size_t i=0;i<o_len; i++){
+        std::cout << rbuf[i];
+    }
+    return result;
+}
+

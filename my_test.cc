@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 
 #include "packet_parser.h"
-#include "trap_handler.h"
 #include "mib_handler.h"
 
 
@@ -103,6 +102,8 @@ TEST(ParsePacket, GetAndCheckOIDsFromPacket) {
     snmp_pdu pdu;
     u_char *data = converted_packet;
 
+    char mib_dir[] = "/home/yana/mibs_combined/";
+    init_mib(mib_dir);
     u_char community[COMMUNITY_MAX_LEN];
     size_t community_length = COMMUNITY_MAX_LEN;
     data = snmp_comstr_parse(data, &example_packet_size,
@@ -117,12 +118,7 @@ TEST(ParsePacket, GetAndCheckOIDsFromPacket) {
                                   "varbinds");
 
     get_var_bind_sequences(data, &example_packet_size, &pdu);
-    EXPECT_TRUE(CheckTrapOid(&pdu));
-    EXPECT_TRUE(print_handler(&pdu));
-
+    print_handler(&pdu);
 }
 
-TEST(Mib, ReadOneMib) {
-   init_mib();
-}
 

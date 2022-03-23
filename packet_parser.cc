@@ -813,38 +813,3 @@ snmp_oid_compare(const oid * in_name1,
         return 1;
     return 0;
 }
-
-bool CheckTrapOid(snmp_pdu* pdu){
-          netsnmp_variable_list *vars;
-          oid snmpTrapOid[]    = { 1, 3, 6, 1, 6, 3, 1, 1, 4, 1, 0 };
-          oid trapOid[MAX_OID_LEN+2] = {0};
-          int trapOidLen;
-
-          vars = pdu->variables;
-          if (vars)
-              vars = vars->next_variable;
-          if (!vars || snmp_oid_compare(vars->name, vars->name_length,
-                                        snmpTrapOid, OID_LENGTH(snmpTrapOid))) {
-          /*
-       * Didn't find it!
-       * Let's look through the full list....
-       */
-      for ( vars = pdu->variables; vars; vars=vars->next_variable) {
-                  if (!snmp_oid_compare(vars->name, vars->name_length,
-                                        snmpTrapOid, OID_LENGTH(snmpTrapOid)))
-                      break;
-              }
-              if (!vars) {
-              /*
-           * Still can't find it!  Give up.
-           */
-          std::cout << "Cannot find TrapOID in TRAP2 PDU\n" << std::endl;
-          return false;
-            }
-            }
-          memcpy(trapOid, vars->val.objid, vars->val_len);
-          trapOidLen = vars->val_len /sizeof(oid);
-          std::cout << "snmptrapd "<< trapOid << " " <<  trapOidLen << std::endl;
-          return true;
-}
-

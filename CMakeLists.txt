@@ -13,14 +13,14 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(googletest)
 
 
-add_executable(snmp_shared_lib main.cpp mib_handler.cc default_store.cc
+add_executable(snmp_shared_lib main.cpp mib_handler.cc default_store.cc packet_parser.cc
     )
 
 enable_testing()
 
 add_executable(
   my_test
-  my_test.cc packet_parser.cc trap_handler.cc mib_handler.cc default_store.cc
+  my_test.cc packet_parser.cc mib_handler.cc default_store.cc
 
 )
 target_link_libraries(

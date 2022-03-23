@@ -694,7 +694,7 @@ netsnmp_sprint_realloc_objid_tree(u_char ** buf, size_t * buf_len,
                                   int *buf_overflow,
                                   const oid * objid, size_t objidlen);
 
-void init_mib();
+void init_mib(const char *dirname);
 void
 print_subtree(FILE * f, struct tree *tree, int count);
 void
@@ -703,4 +703,14 @@ static struct node *
 parse(FILE * fp, struct node *root);
 static int
 read_module_replacements(const char *name);
+int
+snmp_strcat(u_char ** buf, size_t * buf_len, size_t * out_len,
+            int allow_realloc, const u_char * s);
+bool print_handler(snmp_pdu* pdu);
+int
+sprint_realloc_timeticks(u_char ** buf, size_t * buf_len, size_t * out_len,
+                         int allow_realloc,
+                         const netsnmp_variable_list * var,
+                         const struct enum_list *enums,
+                         const char *hint, const char *units);
 #endif // MIB_HANDLER_H
