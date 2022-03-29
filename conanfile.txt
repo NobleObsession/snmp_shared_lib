@@ -1,0 +1,13 @@
+[requires]
+boost/1.69.0 #TODO NO boost::property_tree in conan.io channel!
+#bzip2/1.0.8
+
+
+[options]
+#boost:asio_no_deprecated=True
+boost:without_random=False
+boost_system:shared=False
+[generators]
+cmake_find_package
+txt
+cmake

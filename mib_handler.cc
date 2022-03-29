@@ -6308,45 +6308,19 @@ realloc_format_plain_trap(u_char ** buf, size_t * buf_len,
 
 
         for (vars = pdu->variables; vars != NULL; vars = vars->next_variable) {
-            if (!snmp_strcat
-                (buf, buf_len, out_len, allow_realloc,
-                 (const u_char *) "\t")) {
-                return false;
-            }
             if (!sprint_realloc_variable(buf, buf_len, out_len, allow_realloc,
                                          vars->name, vars->name_length,
                                          vars)) {
                 return false;
             }
-            if (!snmp_strcat
-                    (buf, buf_len, out_len, allow_realloc, (const u_char *) "\n")) {
+            if(vars->next_variable != NULL){
+                if (!snmp_strcat
+                        (buf, buf_len, out_len, allow_realloc, (const u_char *) ", ")) {
                     return false;
+                }
             }
-
-             /*
-             * String is already null-terminated.  That's all folks!
-             */
 
         }
          return true;
     }
-/*
- *  Trap handler for logging to a file
- */
-bool print_handler(snmp_pdu *pdu)
-{
-    u_char         *rbuf = NULL;
-    size_t          r_len = 64, o_len = 0;
-
-    if ((rbuf = (u_char *) calloc(r_len, 1)) == NULL) {
-            std::cout << "couldn't display trap -- malloc failed\n";
-            return false;	/* Failed but keep going */
-    }
-    bool result = realloc_format_plain_trap(&rbuf, &r_len, &o_len, true,
-                                                       pdu);
-    for(size_t i=0;i<o_len; i++){
-        std::cout << rbuf[i];
-    }
-    return result;
-}
 

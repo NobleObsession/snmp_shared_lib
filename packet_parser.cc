@@ -772,44 +772,20 @@ void get_var_bind_sequences(u_char* data, size_t* length, snmp_pdu* pdu){
 
 }
 
-int
-snmp_oid_compare(const oid * in_name1,
-                 size_t len1, const oid * in_name2, size_t len2)
-{
-    int    len;
-    const oid *name1 = in_name1;
-    const oid *name2 = in_name2;
+void get_pdu(u_char* data, size_t* length,  snmp_pdu* pdu){
+    size_t community_length = COMMUNITY_MAX_LEN;
+    u_char *community = new u_char[COMMUNITY_MAX_LEN];
+    data = snmp_comstr_parse(data, length,
+                             community, &community_length,
+                             &pdu->version);
+    u_char          msg_type; //todo check memory
+    u_char          type;   //todo check memory
+    data = asn_parse_header(data, length, &msg_type);
+    data = get_preceding_fields(data, length, &type, pdu);
+    data = asn_parse_sequence(data, length, &type,
+                              (ASN_SEQUENCE | ASN_CONSTRUCTOR),
+                              "varbinds");
 
-    /*
-     * len = minimum of len1 and len2
-     */
-    if (len1 < len2)
-        len = len1;
-    else
-        len = len2;
-    /*
-     * find first non-matching OID
-     */
-    while (len-- > 0) {
-        /*
-         * these must be done in seperate comparisons, since
-         * subtracting them and using that result has problems with
-         * subids > 2^31.
-         */
-        if (*(name1) != *(name2)) {
-            if (*(name1) < *(name2))
-                return -1;
-            return 1;
-        }
-        name1++;
-        name2++;
-    }
-    /*
-     * both OIDs equal up to length of shorter OID
-     */
-    if (len1 < len2)
-        return -1;
-    if (len2 < len1)
-        return 1;
-    return 0;
+    get_var_bind_sequences(data, length, pdu);
+    delete[] community;
 }

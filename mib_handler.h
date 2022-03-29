@@ -706,11 +706,16 @@ read_module_replacements(const char *name);
 int
 snmp_strcat(u_char ** buf, size_t * buf_len, size_t * out_len,
             int allow_realloc, const u_char * s);
-bool print_handler(snmp_pdu* pdu);
+
 int
 sprint_realloc_timeticks(u_char ** buf, size_t * buf_len, size_t * out_len,
                          int allow_realloc,
                          const netsnmp_variable_list * var,
                          const struct enum_list *enums,
                          const char *hint, const char *units);
+
+bool
+realloc_format_plain_trap(u_char ** buf, size_t * buf_len,
+                          size_t * out_len, bool allow_realloc,
+                          snmp_pdu *pdu);
 #endif // MIB_HANDLER_H

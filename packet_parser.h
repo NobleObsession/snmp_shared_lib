@@ -309,32 +309,7 @@ u_char* get_preceding_fields(u_char* data, size_t* length, u_char* type, snmp_pd
 
 void get_var_bind_sequences(u_char* data, size_t* length, snmp_pdu* pdu);
 
-/**
- * Lexicographically compare two object identifiers.
- *
- * @param[in] in_name1 Left hand side OID.
- * @param[in] len1     Length of LHS OID.
- * @param[in] in_name2 Rigth and side OID.
- * @param[in] len2     Length of RHS OID.
- *
- * Caution: this method is called often by
- *          command responder applications (ie, agent).
- *
- * @return -1 if name1 < name2, 0 if name1 = name2, 1 if name1 > name2
- */
-int
-snmp_oid_compare(const oid * in_name1,
-                 size_t len1, const oid * in_name2, size_t len2);
-
-/**
- * @brief CheckTrapOid
- * @param pdu
- * @return
- * v2c/v3 notifications *should* have snmpTrapOID as the
- * second varbind, so we can go straight there.
- * But check, just to make sure
-*/
-bool CheckTrapOid(snmp_pdu* pdu);
+void get_pdu(u_char* data, size_t* length,  snmp_pdu* pdu);
 
 #endif // PARSE_PACKET_H
 
