@@ -8,10 +8,8 @@
 #include <stdlib.h>
 #include <arpa/inet.h>
 #include <dirent.h>
-#include <iostream>
 
 #include "snmp_pdu.h"
-#include "default_store.h"
 #include "shared_constants.h"
 
 /*
@@ -667,10 +665,10 @@ static char *gpMibErrorString;
 #define STRINGMAX 1024
 static char gMibNames[STRINGMAX];
 
+#define I64CHARSZ 21
+
 int
 add_mibdir(const char *dirname);
-int
-add_mibfile(const char* tmpstr, const char* d_name);
 
 static int
 name_hash(const char *name);

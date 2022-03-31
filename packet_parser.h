@@ -26,11 +26,6 @@
 
 #define OID_LENGTH(x)  (sizeof(x) / sizeof((x)[0]))
 
-struct counter64 {
-       u_long          high;
-       u_long          low;
-   };
-
 /**
  * asn_parse_length - interprets the length of the current object.
  *

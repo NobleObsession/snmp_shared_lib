@@ -1,7 +1,7 @@
 #ifndef SHARED_CONSTANTS_H
 #define SHARED_CONSTANTS_H
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #define u_char unsigned char
 
@@ -10,8 +10,6 @@
 /** @def SNMP_FREE(s)
     Frees a pointer only if it is !NULL and sets its value to NULL */
 #define SNMP_FREE(s)    do { if (s) { free((void *)s); s=NULL; } } while(0)
-
-#define SNMPERR_GENERR			(-1)
 
 /** @def SNMP_MIN(a, b)
     Computers the minimum of a and b. */
@@ -50,5 +48,18 @@
 #define ASN_COUNTER	(ASN_APPLICATION | 1)
 #define ASN_GAUGE	(ASN_APPLICATION | 2)
 #define ASN_TIMETICKS   (ASN_APPLICATION | 3)
+#define ASN_UINTEGER    (ASN_APPLICATION | 7)   /* historic - don't use */
+#define ASN_OPAQUE	(ASN_APPLICATION | 4)   /* changed so no conflict with other includes */
+
+/*
+ * defined types (from the SMI, RFC 1442)
+ */
+#define ASN_NSAP	(ASN_APPLICATION | 5)   /* historic - don't use */
+#define ASN_COUNTER64   (ASN_APPLICATION | 6)
+
+struct counter64 {
+    u_long          high;
+    u_long          low;
+};
 
 #endif // SHARED_CONSTANTS_H

@@ -64,7 +64,7 @@ find_package(Boost)
 
     set (SHARED_LIB_NAME TrapDataProvider)
     add_library(${SHARED_LIB_NAME} SHARED
-            mib_handler.cc default_store.cc packet_parser.cc
+            mib_handler.cc packet_parser.cc
             packet_handler.cc TrapDataProvider.cc
             )
     add_executable(snmp_shared_lib main.cpp)

@@ -6,6 +6,7 @@
 #include <sys/ioctl.h>
 #include <net/if.h>
 #include <unistd.h>
+#include <string>
 
 std::string HandleMibPacket(u_char* received_packet, size_t packet_size, const char* mib_dir);
 

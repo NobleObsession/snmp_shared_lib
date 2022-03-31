@@ -758,10 +758,10 @@ void get_var_bind_sequences(u_char* data, size_t* length, snmp_pdu* pdu){
                                      &vp->val_len, &var_val, length);
       if (data == NULL){
         std::cout << "data is null" << std::endl;
-         //goto fail;
+         goto fail;
       }
       if (snmp_set_var_objid(vp, objid, vp->name_length)){
-        //goto fail;
+        goto fail;
       }
 
       len = SNMP_MAX_PACKET_LEN;
@@ -778,7 +778,7 @@ void get_var_bind_sequences(u_char* data, size_t* length, snmp_pdu* pdu){
           case ASN_COUNTER:
           case ASN_GAUGE:
           case ASN_TIMETICKS:
-          //case ASN_UINTEGER:
+          case ASN_UINTEGER:
               vp->val.integer = (long *) vp->buf;
               vp->val_len = sizeof(u_long);
               p = asn_parse_unsigned_int(var_val, &len, &vp->type,
@@ -804,8 +804,8 @@ void get_var_bind_sequences(u_char* data, size_t* length, snmp_pdu* pdu){
                   goto fail;
               /* fallthrough */
           case ASN_OCTET_STR:
-          //case ASN_OPAQUE:
-         // case ASN_NSAP:
+          case ASN_OPAQUE:
+          case ASN_NSAP:
               if (vp->val_len < sizeof(vp->buf)) {
                   vp->val.string = (u_char *) vp->buf;
               } else {
