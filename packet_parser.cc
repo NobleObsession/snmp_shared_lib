@@ -646,6 +646,93 @@ void *netsnmp_memdup(const void *from, size_t size){
     return to;
 }
 
+
+/**
+ * @internal
+ * asn_parse_unsigned_int - pulls an unsigned long out of an ASN int type.
+ *
+ *  On entry, datalength is input as the number of valid bytes following
+ *   "data".  On exit, it is returned as the number of valid bytes
+ *   following the end of this object.
+ *
+ *  Returns a pointer to the first byte past the end
+ *   of this object (i.e. the start of the next object).
+ *  Returns NULL on any error.
+ *
+ * @param data       IN - pointer to start of object
+ * @param datalength IN/OUT - number of valid bytes left in buffer
+ * @param type       OUT - asn type of object
+ * @param intp       IN/OUT - pointer to start of output buffer
+ * @param intsize    IN - size of output buffer
+ *
+ * @return pointer to the first byte past the end
+ *   of this object (i.e. the start of the next object) Returns NULL on any error
+ */
+u_char         *
+asn_parse_unsigned_int(u_char * data,
+                       size_t * datalength,
+                       u_char * type, u_long * intp, size_t intsize)
+{
+    /*
+     * ASN.1 integer ::= 0x02 asnlength byte {byte}*
+     */
+    static const char *errpre = "parse uint";
+    u_char *bufp = data;
+    u_long          asn_length;
+    u_long value = 0;
+
+    if (NULL == data || NULL == datalength || NULL == type || NULL == intp) {
+        //ERROR_MSG("parse uint: NULL pointer");
+        return NULL;
+    }
+
+    if (intsize != sizeof(long)) {
+        //_asn_size_err(errpre, intsize, sizeof(long));
+        return NULL;
+    }
+
+    /** need at least 2 bytes to work with: type, length (which might be 0)  */
+    if (*datalength < 2) {
+        //_asn_short_err(errpre, *datalength, 2);
+        return NULL;
+    }
+
+    *type = *bufp++;
+    if (*type != ASN_COUNTER && *type != ASN_GAUGE && *type != ASN_TIMETICKS
+        //&& *type != ASN_UINTEGER) {
+            ){
+        //_asn_type_err(errpre, *type);
+        return NULL;
+    }
+
+    bufp = asn_parse_nlength(bufp, *datalength - 1, &asn_length);
+    if (NULL == bufp) {
+        //_asn_short_err(errpre, *datalength - 1, asn_length);
+        return NULL;
+    }
+
+    if ((asn_length > (intsize + 1)) || ((int) asn_length == 0) ||
+        ((asn_length == intsize + 1) && *bufp != 0x00)) {
+        //_asn_length_err(errpre, (size_t) asn_length, intsize);
+        return NULL;
+    }
+    *datalength -= (int) asn_length + (bufp - data);
+
+    //DEBUGDUMPSETUP("recv", data, bufp - data + asn_length);
+
+    while (asn_length--) {
+        value = (value << 8) | *bufp++;
+    }
+
+    //CHECK_OVERFLOW_U(value,2);
+
+    //DEBUGMSG(("dumpv_recv", "  UInteger:\t%ld (0x%.2lX)\n", value, value));
+
+    *intp = value;
+    return bufp;
+}
+
+
 void get_var_bind_sequences(u_char* data, size_t* length, snmp_pdu* pdu){
     size_t          len;
     u_char         *p;
@@ -679,100 +766,142 @@ void get_var_bind_sequences(u_char* data, size_t* length, snmp_pdu* pdu){
 
       len = SNMP_MAX_PACKET_LEN;
       switch ((short) vp->type) {
-        case ASN_INTEGER:
-          vp->val.integer = (long *) vp->buf;
-          vp->val_len = sizeof(long);
-          p = asn_parse_int(var_val, &len, &vp->type,
-                              (long *) vp->val.integer,
-                              sizeof(*vp->val.integer));
-          if (!p){
-            //goto fail;
-          }
-                break;
-        case ASN_COUNTER:
-        case ASN_GAUGE:
-        case ASN_TIMETICKS:
-        case ASN_COUNTER64:
-          vp->val.counter64 = (struct counter64 *) vp->buf;
-          vp->val_len = sizeof(struct counter64);
-          p = asn_parse_unsigned_int64(var_val, &len, &vp->type,
-                                         (struct counter64 *) vp->val.
-                                         counter64, vp->val_len);
-          if (!p)
-            //goto fail;
-            break;
-          case ASN_IPADDRESS:
-            if (vp->val_len != 4){
-                return;
-            }
+          case ASN_INTEGER:
+              vp->val.integer = (long *) vp->buf;
+              vp->val_len = sizeof(long);
+              p = asn_parse_int(var_val, &len, &vp->type,
+                                (long *) vp->val.integer,
+                                sizeof(*vp->val.integer));
+              if (!p)
+                  goto fail;
+              break;
+          case ASN_COUNTER:
+          case ASN_GAUGE:
+          case ASN_TIMETICKS:
+          //case ASN_UINTEGER:
+              vp->val.integer = (long *) vp->buf;
+              vp->val_len = sizeof(u_long);
+              p = asn_parse_unsigned_int(var_val, &len, &vp->type,
+                                         (u_long *) vp->val.integer,
+                                         vp->val_len);
+              if (!p)
+                  goto fail;
+              break;
 
-              //goto fail;
+          case ASN_COUNTER64:
+              vp->val.counter64 = (struct counter64 *) vp->buf;
+              vp->val_len = sizeof(struct counter64);
+              p = asn_parse_unsigned_int64(var_val, &len, &vp->type,
+                                           (struct counter64 *) vp->val.
+                                                   counter64, vp->val_len);
+              if (!p)
+                  goto fail;
+              break;
+
+
+          case ASN_IPADDRESS:
+              if (vp->val_len != 4)
+                  goto fail;
               /* fallthrough */
           case ASN_OCTET_STR:
-                if (vp->val_len < sizeof(vp->buf)) {
-                   vp->val.string = (u_char *) vp->buf;
-                } else {
-                   vp->val.string = (u_char *) malloc(vp->val_len);
-                }
-                if (vp->val.string == NULL) {
-                               //goto fail;
-                    std::cout << "val.string == NULL" << std::endl;
-                }
-                p = asn_parse_string(var_val, &len, &vp->type, vp->val.string,
-                                             &vp->val_len);
-                if (!p){
-                    std::cout << "not p in string" << std::endl;
-              //goto fail;
-                }
-                break;
+          //case ASN_OPAQUE:
+         // case ASN_NSAP:
+              if (vp->val_len < sizeof(vp->buf)) {
+                  vp->val.string = (u_char *) vp->buf;
+              } else {
+                  vp->val.string = (u_char *) malloc(vp->val_len);
+              }
+              if (vp->val.string == NULL) {
+                  goto fail;
+              }
+              p = asn_parse_string(var_val, &len, &vp->type, vp->val.string,
+                                   &vp->val_len);
+              if (!p)
+                  goto fail;
+              break;
           case ASN_OBJECT_ID:
-                vp->val_len = MAX_OID_LEN;
-                p = asn_parse_objid(var_val, &len, &vp->type, objid, &vp->val_len);
-                if (!p){
-                    std::cout << "Not p" << std::endl;
-                }
-                    //goto fail;
-                vp->val_len *= sizeof(oid);
-                vp->val.objid = static_cast<unsigned long*>(netsnmp_memdup(objid, vp->val_len));
-                if (vp->val.objid == NULL){
-                    std::cout << "val.objid == NULL" << std::endl;
-                }
-                break;
+              vp->val_len = MAX_OID_LEN;
+              p = asn_parse_objid(var_val, &len, &vp->type, objid, &vp->val_len);
+              if (!p)
+                  goto fail;
+              vp->val_len *= sizeof(oid);
+              vp->val.objid = (oid*) netsnmp_memdup(objid, vp->val_len);
+              if (vp->val.objid == NULL)
+                  goto fail;
+              break;
+          case SNMP_NOSUCHOBJECT:
+          case SNMP_NOSUCHINSTANCE:
+          case SNMP_ENDOFMIBVIEW:
+          case ASN_NULL:
+              break;
+          case ASN_BIT_STR:
+              vp->val.bitstring = (u_char *) malloc(vp->val_len);
+              if (vp->val.bitstring == NULL) {
+                  goto fail;
+              }
+              p = asn_parse_bitstring(var_val, &len, &vp->type,
+                                      vp->val.bitstring, &vp->val_len);
+              if (!p)
+                  goto fail;
+              break;
+          default:
+              //snmp_log(LOG_ERR, "bad type returned (%x)\n", vp->type);
+              goto fail;
+              break;
+      }
+        //DEBUGINDENTADD(-4);
 
-            case SNMP_NOSUCHOBJECT:
-            case SNMP_NOSUCHINSTANCE:
-            case SNMP_ENDOFMIBVIEW:
-            case ASN_NULL:
-                break;
-            case ASN_BIT_STR:
-                vp->val.bitstring = (u_char *) malloc(vp->val_len);
-                if (vp->val.bitstring == NULL) {
-                    //goto fail;
-                }
-                p = asn_parse_bitstring(var_val, &len, &vp->type,
-                                    vp->val.bitstring, &vp->val_len);
-                if (!p)
-                    //goto fail;
-                break;
-            default:
-                std::cout << "bad type returned" << std::endl;
-                //snmp_log(LOG_ERR, "bad type returned (%x)\n", vp->type);
-                //goto fail;
-                break;
-            }
-
-            if (NULL == vplast) {
-                pdu->variables = vp;
-            } else {
-                vplast->next_variable = vp;
-            }
-            vplast = vp;
-            vp = NULL;
+        if (NULL == vplast) {
+            pdu->variables = vp;
+        } else {
+            vplast->next_variable = vp;
         }
+        vplast = vp;
+        vp = NULL;
+    }
+    //return 0;
 
+    fail:
+    {
+        //const char *errstr = snmp_api_errstring(SNMPERR_SUCCESS);
+        //DEBUGMSGTL(("recv", "error while parsing VarBindList:%s\n", errstr));
+    }
+    /** if we were parsing a var, remove it from the pdu and free it */
+    if (vp) {
+        //snmp_free_var(vp);
+    }
+
+   // return -1;
 }
 
-void get_pdu(u_char* data, size_t* length,  snmp_pdu* pdu){
+/*
+ * Parses the packet received to determine version, either directly
+ * from packets version field or inferred from ASN.1 construct.
+ */
+static int
+snmp_parse_version(u_char * data, size_t length)
+{
+    u_char          type;
+    long            version = SNMPERR_BAD_VERSION;
+
+    data = asn_parse_sequence(data, &length, &type,
+                              (ASN_SEQUENCE | ASN_CONSTRUCTOR), "version");
+    if (data) {
+        data =
+                asn_parse_int(data, &length, &type, &version, sizeof(version));
+        if (!data || type != ASN_INTEGER) {
+            return SNMPERR_BAD_VERSION;
+        }
+    }
+    return version;
+}
+
+bool parse_pdu(u_char* data, size_t* length, snmp_pdu* pdu){
+
+    pdu->version = snmp_parse_version(data, *length);
+    if(SNMP_VERSION_2c != pdu->version){
+        return false;
+    }
     size_t community_length = COMMUNITY_MAX_LEN;
     u_char *community = new u_char[COMMUNITY_MAX_LEN];
     data = snmp_comstr_parse(data, length,
@@ -780,7 +909,10 @@ void get_pdu(u_char* data, size_t* length,  snmp_pdu* pdu){
                              &pdu->version);
     u_char          msg_type; //todo check memory
     u_char          type;   //todo check memory
+
+    /* get msg type (here we parse type trap v2) */
     data = asn_parse_header(data, length, &msg_type);
+
     data = get_preceding_fields(data, length, &type, pdu);
     data = asn_parse_sequence(data, length, &type,
                               (ASN_SEQUENCE | ASN_CONSTRUCTOR),
@@ -788,4 +920,5 @@ void get_pdu(u_char* data, size_t* length,  snmp_pdu* pdu){
 
     get_var_bind_sequences(data, length, pdu);
     delete[] community;
+    return true;
 }

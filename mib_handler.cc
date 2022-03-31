@@ -6302,10 +6302,13 @@ realloc_format_plain_trap(u_char ** buf, size_t * buf_len,
       *    pdu       - the pdu information
       */
 {
-        netsnmp_variable_list *vars;        /* variables assoc with trap */    /*
-         * Output the PDU variables.
-         */
 
+
+        netsnmp_variable_list *vars;        /* variables assoc with trap */
+
+        /*
+        * Finally, output the PDU variables.
+        */
 
         for (vars = pdu->variables; vars != NULL; vars = vars->next_variable) {
             if (!sprint_realloc_variable(buf, buf_len, out_len, allow_realloc,

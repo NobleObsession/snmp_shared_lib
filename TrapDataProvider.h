@@ -27,9 +27,9 @@ public:
     bool Configure( LibraryType::Config config, LibraryType::Config config_override ) override;
 
 private:
-    void                       ReportMessage( string &IpAddress, string &Message );
+    void                       ReportMessage( string &Timestamp, string &IpAddress, string &Message );
     static LibraryType::Config getConfigWithDefaults( LibraryType::Config config, LibraryType::Config config_override );
-    void                tapMessage(const string& ip_addr,  const string &msg );
+    void                tapMessage(const string& timestamp, const string& ip_addr,  const string &msg );
 
     int    m_Port{ 0 };
     string m_BindIPAddress;

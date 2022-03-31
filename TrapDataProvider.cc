@@ -1,4 +1,4 @@
-#define LOG_CATEGORY "SyslogUdpDP"
+//#define LOG_CATEGORY "SyslogUdpDP"
 #include <memory>
 
 #include "TrapDataProvider.h"
@@ -9,7 +9,8 @@ create() {
     return new TrapDataUdpDP();
 }
 
-TrapDataUdpDP::TrapDataUdpDP(){};
+TrapDataUdpDP::TrapDataUdpDP(){
+};
 
 
 TrapDataUdpDP::~TrapDataUdpDP() {
@@ -19,9 +20,9 @@ TrapDataUdpDP::~TrapDataUdpDP() {
     }
 }
 
-void TrapDataUdpDP::ReportMessage( string &IpAddress, string &Message ) {
+void TrapDataUdpDP::ReportMessage( string &Timestamp, string &IpAddress, string &Message ) {
     if ( m_DoTap ) {
-        tapMessage( IpAddress, Message );
+        tapMessage( Timestamp, IpAddress, Message );
     }
 }
 
@@ -54,6 +55,7 @@ bool TrapDataUdpDP::Run() {
 
         //        LOG(TRACE) << "Awaiting for data";
         size_t len = m_Socket->receive_from( boost::asio::buffer( recv_buf ), remote_endpoint, 0, error );
+
         if ( error && error != boost::asio::error::message_size ) {
            // MLOG( FATAL ) << error.category().name() << ": " << error.value();
             if ( m_ExitOnError ) {
@@ -62,12 +64,19 @@ bool TrapDataUdpDP::Run() {
             continue;
         }
 
+        std::string timestamp = AddTimestamp();
+
         u_char* data = recv_buf.c_array();
 
         string parsed_packet = HandleMibPacket(data, len, m_MibDirPath.c_str());
+        if(parsed_packet.empty()){
+            continue;
+        }
 
-        string ipAddress = remote_endpoint.address().to_string();
-        ReportMessage( ipAddress, parsed_packet );
+        std::string clientIpAddress = remote_endpoint.address().to_string();
+        std::string transport_info = AddTransportInfo(clientIpAddress, remote_endpoint.port(), m_Port);
+
+        ReportMessage( timestamp, transport_info, parsed_packet);
     }
 
         //MLOG( DEBUG ) << "Socket loop interrupted...";
@@ -167,7 +176,7 @@ LibraryType::Config TrapDataUdpDP::getConfigWithDefaults( LibraryType::Config co
     counters_->events_received++;
 }*/
 
-void TrapDataUdpDP::tapMessage( const string &ip_addr, const string &msg ) {
-    std::cout << msg << endl;
-    m_TapOutput << ip_addr << ' ' << msg << endl; }
+void TrapDataUdpDP::tapMessage( const string &timestamp, const string &ip_addr, const string &msg ) {
+    std::cout << timestamp << ' ' << ip_addr << ' ' << msg << endl;
+    m_TapOutput << timestamp << ' ' << ip_addr << ' ' << msg << endl; }
 

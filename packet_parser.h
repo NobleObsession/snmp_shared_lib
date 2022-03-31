@@ -309,7 +309,7 @@ u_char* get_preceding_fields(u_char* data, size_t* length, u_char* type, snmp_pd
 
 void get_var_bind_sequences(u_char* data, size_t* length, snmp_pdu* pdu);
 
-void get_pdu(u_char* data, size_t* length,  snmp_pdu* pdu);
+bool parse_pdu(u_char* data, size_t* length, snmp_pdu* pdu);
 
 #endif // PARSE_PACKET_H
 
