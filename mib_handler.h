@@ -50,33 +50,6 @@ static struct tree *tbuckets[NHASHSIZE];
 static struct module *module_head = NULL;
 static int      translation_table[256];
 
-static char     Standard_Prefix[] = ".1.3.6.1.2.1";
-
-/*
- * Set default here as some uses of read_objid require valid pointer.
- */
-static char    *Prefix = &Standard_Prefix[0];
-typedef struct _PrefixList {
-    const char     *str;
-    int             len;
-}              *PrefixListPtr, PrefixList;
-
-/*
- * Here are the prefix strings.
- * Note that the first one finds the value of Prefix or Standard_Prefix.
- * Any of these MAY start with period; all will NOT end with period.
- * Period is added where needed.  See use of Prefix in this module.
- */
-static PrefixList      mib_prefixes[] = {
-    {&Standard_Prefix[0]},      /* placeholder for Prefix data */
-    {".iso.org.dod.internet.mgmt.mib-2"},
-    {".iso.org.dod.internet.experimental"},
-    {".iso.org.dod.internet.private"},
-    {".iso.org.dod.internet.snmpParties"},
-    {".iso.org.dod.internet.snmpSecrets"},
-    {NULL, 0}                   /* end of list */
-};
-
 #define TC_INCR 100
 static struct tc {                     /* textual conventions */
     int             type;
